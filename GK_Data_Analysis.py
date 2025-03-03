@@ -19,7 +19,7 @@ print(df.isnull().sum())
 
 if 'Torque (N-m)' in df.columns:
     df['Torque (N-m)'] = df.apply(
-        lambda row: 0.0981 * (row['Scale Reading (g)']- row['Lever arm load  (end) (g)'] )* 0.001 * row['Moment arm (cm)'], axis=1
+        lambda row: 0.00981 * (row['Scale Reading (g)']- row['Lever arm load  (end) (g)'])* 0.001 * row['Moment arm (cm)'], axis=1 # took out "- row['Lever arm load  (end) (g)']"
     )
 if 'Electrical Power (W)' in df.columns:
     df['Electrical Power (W)'] = df.apply(
@@ -55,7 +55,7 @@ df.to_excel("GK_Data_M1_filled.xlsx", index=False)
 
 # Plot the data
 
-#Torque vs RPM for each applied voltage
+#Torque vs RPM for each applied voltage (all plots on a single graph)
 sns.set()
 fig, ax = plt.subplots()
 for voltage in df['Applied Voltage (v)'].unique():
@@ -67,14 +67,52 @@ ax.legend(title='Applied Voltage')
 plt.title('Torque vs RPM for each applied voltage')
 plt.show()
 
-#Seperate plots for each voltage level
+#plot motor speed vs mechanical load (N) for all voltages in one plot
+fig, ax = plt.subplots()
+for voltage in df['Applied Voltage (v)'].unique():
+    df_v = df[df['Applied Voltage (v)'] == voltage]
+    ax.scatter(df_v['Scale Reading (g)']*0.00981, df_v['Tach Reading (RPM)'], label=f'{voltage} V')
+ax.set_xlabel('Mechanical Load (N)')
+ax.set_ylabel('RPM')
+ax.legend(title='Applied Voltage')
+plt.title('Angular Speed (RPM) vs Mechanical Load (N) for each applied voltage')
+plt.show()
+
+#plot current draw vs mechanical load (N) for all voltages in one plot
+fig, ax = plt.subplots()
+for voltage in df['Applied Voltage (v)'].unique():
+    df_v = df[df['Applied Voltage (v)'] == voltage]
+    ax.scatter(df_v['Scale Reading (g)']*0.00981, df_v['Current Draw (A)'], label=f'{voltage} V')
+ax.set_xlabel('Mechanical Load (N)')
+ax.set_ylabel('Current Draw (A)')
+ax.legend(title='Applied Voltage')
+plt.title('Current Draw (A) vs Mechanical Load (N) for each applied voltage')
+plt.show()
+
+#plot mechanical power vs efficiency for each applied voltage
+for voltage in df['Applied Voltage (v)'].unique():
+    df_v = df[df['Applied Voltage (v)'] == voltage]
+    fig, ax = plt.subplots()
+    df_v = df_v.sort_values(by='Torque (N-m)')
+    coefficients = np.polyfit(df_v['Torque (N-m)'], df_v['Efficiency'], 2)
+    polynomial = np.poly1d(coefficients)
+    torque_range = np.linspace(df_v['Torque (N-m)'].min(), df_v['Torque (N-m)'].max(), 100)
+    plt.plot(torque_range, polynomial(torque_range), label=f'Fit: {coefficients[0]:.6f}x^2 + {coefficients[1]:.4f}x+{coefficients[2]:.4f}')
+    ax.scatter(df_v['Torque (N-m)'], df_v['Efficiency'])
+    plt.legend()
+    ax.set_xlabel('Torque (N-m)')
+    ax.set_ylabel('Efficiency')
+    plt.title(f'Mechanical Power vs Efficiency for {voltage} V')
+    plt.show()
+
+#Seperate plots of torque vs speed for each voltage level
 for voltage in df['Applied Voltage (v)'].unique():
     df_v = df[df['Applied Voltage (v)'] == voltage]
     fig, ax = plt.subplots()
     coefficients = np.polyfit(df_v['Tach Reading (RPM)'], df_v['Torque (N-m)'], 1)
     polynomial = np.poly1d(coefficients)
     #add horizontal and vertical error bars
-    ax.errorbar(df_v['Tach Reading (RPM)'], df_v['Torque (N-m)'], xerr=abs(df_v['Relative Error Torque']), yerr=0.05, fmt='o')
+    ax.errorbar(df_v['Tach Reading (RPM)'], df_v['Torque (N-m)'], xerr=0.05, yerr=abs(df_v['Relative Error Torque']), fmt='o')
     
     ax.scatter(df_v['Tach Reading (RPM)'], df_v['Torque (N-m)'])
     plt.plot(df_v['Tach Reading (RPM)'], polynomial(df_v['Tach Reading (RPM)']), label=f'Fit: {coefficients[0]:.6f}x + {coefficients[1]:.4f}')
@@ -84,19 +122,7 @@ for voltage in df['Applied Voltage (v)'].unique():
     plt.title(f'Torque vs RPM for {voltage} V')
     plt.show()
 
-#plot mechanical power vs efficiency for each applied voltage
-for voltage in df['Applied Voltage (v)'].unique():
-    df_v = df[df['Applied Voltage (v)'] == voltage]
-    fig, ax = plt.subplots()
-    df_v = df_v.sort_values(by='Mechanical Power (W)')
-    coefficients = np.polyfit(df_v['Mechanical Power (W)'], df_v['Efficiency'], 2)
-    polynomial = np.poly1d(coefficients)
-    plt.plot(df_v['Mechanical Power (W)'], polynomial(df_v['Mechanical Power (W)']), label=f'Fit: {coefficients[0]:.6f}x^2 + {coefficients[1]:.4f}x+{coefficients[2]:.4f}')
-    ax.scatter(sorted(df_v['Mechanical Power (W)']), df_v['Efficiency'])
-    ax.set_xlabel('Mechanical Power (W)')
-    ax.set_ylabel('Efficiency')
-    plt.title(f'Mechanical Power vs Efficiency for {voltage} V')
-    plt.show()
+
 
 #Plot torque vs current load for each applied voltage
 torque_constant = []
@@ -116,6 +142,7 @@ for voltage in df['Applied Voltage (v)'].unique():
     ax.set_ylabel('Torque (N-m)')
     plt.title(f'Torque vs Current Draw for {voltage} V')
     plt.show()
+
 #Plot the speed vs current load curve for each applied voltage
 K_e = [] #Back EMF constant
 for voltage in df['Applied Voltage (v)'].unique():
@@ -133,6 +160,9 @@ for voltage in df['Applied Voltage (v)'].unique():
     ax.set_ylabel('RPM')
     plt.title(f'RPM vs Current Draw for {voltage} V')
     plt.show()
+
+
+
 
 #Print the properties of the motor
 print("Properties of the motor:")
