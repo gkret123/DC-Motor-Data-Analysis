@@ -1,0 +1,1 @@
+plt.savefig(os.path.join(my_path, 'DC-Motor-Data-Analysis/Plo
