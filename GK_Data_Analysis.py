@@ -5,7 +5,7 @@ import seaborn as sns
 import os
 
 # Load the Excel file into a df
-file_path = "GK_Data_M1.xlsx"
+file_path = "DC-Motor-Data-Analysis\GK_Data_M1.xlsx"
 df = pd.read_excel(file_path)
 
 # Display the first few rows 
@@ -20,7 +20,7 @@ print(df.isnull().sum())
 
 if 'Torque (N-m)' in df.columns:
     df['Torque (N-m)'] = df.apply(
-        lambda row: 0.00981 * (row['Scale Reading (g)']- row['Lever arm load  (end) (g)'])* 0.001 * row['Moment arm (cm)'], axis=1 # took out "- row['Lever arm load  (end) (g)']"
+        lambda row: 0.00981 * (row['Scale Reading (g)'] - row['Lever arm load  (end) (g)'])* 0.01 * row['Moment arm (cm)'], axis=1 # took out "- row['Lever arm load  (end) (g)']"
     )
 if 'Electrical Power (W)' in df.columns:
     df['Electrical Power (W)'] = df.apply(

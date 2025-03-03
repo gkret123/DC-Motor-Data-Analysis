@@ -8,9 +8,9 @@ import GK_Data_Analysis as DA
 my_path = os.path.dirname(os.path.abspath(__file__))
 
 # Plot the data
-
-#Torque vs RPM for each applied voltage (all plots on a single graph)
 sns.set()
+#Torque vs RPM for each applied voltage (all plots on a single graph)
+
 fig, ax = plt.subplots()
 for voltage in DA.df['Applied Voltage (v)'].unique():
     df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage]
@@ -46,34 +46,19 @@ plt.title('Current Draw (A) vs Mechanical Load (N) for each applied voltage')
 plt.savefig(os.path.join(my_path, 'Plots/Current_Draw_vs_Mechanical_Load.png'))
 plt.show()
 
-#plot mechanical power vs efficiency for each applied voltage
-for voltage in DA.df['Applied Voltage (v)'].unique():
-    df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage]
-    fig, ax = plt.subplots()
-    df_v = df_v.sort_values(by='Torque (N-m)')
-    coefficients = np.polyfit(df_v['Torque (N-m)'], df_v['Efficiency'], 2)
-    polynomial = np.poly1d(coefficients)
-    torque_range = np.linspace(df_v['Torque (N-m)'].min(), df_v['Torque (N-m)'].max(), 100)
-    plt.plot(torque_range, polynomial(torque_range), label=f'Fit: {coefficients[0]:.6f}x^2 + {coefficients[1]:.4f}x+{coefficients[2]:.4f}')
-    ax.scatter(df_v['Torque (N-m)'], df_v['Efficiency'])
-    plt.legend()
-    ax.set_xlabel('Torque (N-m)')
-    ax.set_ylabel('Efficiency')
-    plt.title(f'Mechanical Power vs Efficiency for {voltage} V')
-    plt.savefig(os.path.join(my_path, f'Plots/MechPwr_Vs_Efficiency/Mechanical_Power_vs_Efficiency_{voltage}V.png'))
-plt.show()
+
 
 #Seperate plots of torque vs speed for each voltage level
 for voltage in DA.df['Applied Voltage (v)'].unique():
     df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage]
     fig, ax = plt.subplots()
-    coefficients = np.polyfit(df_v['Tach Reading (RPM)'], df_v['Torque (N-m)'], 1)
-    polynomial = np.poly1d(coefficients)
+    coefficients_RPM_vs_Torque = np.polyfit(df_v['Tach Reading (RPM)'], df_v['Torque (N-m)'], 1)
+    polynomial = np.poly1d(coefficients_RPM_vs_Torque)
     #add horizontal and vertical error bars
     ax.errorbar(df_v['Tach Reading (RPM)'], df_v['Torque (N-m)'], xerr=0.05, yerr=abs(df_v['Relative Error Torque']), fmt='o')
     
     ax.scatter(df_v['Tach Reading (RPM)'], df_v['Torque (N-m)'])
-    plt.plot(df_v['Tach Reading (RPM)'], polynomial(df_v['Tach Reading (RPM)']), label=f'Fit: {coefficients[0]:.6f}x + {coefficients[1]:.4f}')
+    plt.plot(df_v['Tach Reading (RPM)'], polynomial(df_v['Tach Reading (RPM)']), label=f'Fit: {coefficients_RPM_vs_Torque[0]:.6f}x + {coefficients_RPM_vs_Torque[1]:.4f}')
     plt.legend()
     ax.set_xlabel('RPM')
     ax.set_ylabel('Torque (N-m)')
@@ -89,12 +74,12 @@ for voltage in DA.df['Applied Voltage (v)'].unique():
     df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage]
     fig, ax = plt.subplots()
     df_v = df_v.sort_values(by='Current Draw (A)')
-    coefficients = np.polyfit(df_v['Current Draw (A)'], df_v['Torque (N-m)'], 1)
-    polynomial = np.poly1d(coefficients)
+    coefficients_Current_vs_Torque = np.polyfit(df_v['Current Draw (A)'], df_v['Torque (N-m)'], 1)
+    polynomial = np.poly1d(coefficients_Current_vs_Torque)
     #the slope of the line is the motor torque constant
     #the average slope
-    torque_constant.append(coefficients[0])
-    plt.plot(df_v['Current Draw (A)'], polynomial(df_v['Current Draw (A)']), label=f'Fit: {coefficients[0]:.6f}x + {coefficients[1]:.4f}')
+    torque_constant.append(coefficients_Current_vs_Torque[0])
+    plt.plot(df_v['Current Draw (A)'], polynomial(df_v['Current Draw (A)']), label=f'Fit: {coefficients_Current_vs_Torque[0]:.6f}x + {coefficients_Current_vs_Torque[1]:.4f}')
     ax.scatter(df_v['Current Draw (A)'], df_v['Torque (N-m)'])
     plt.legend()
     ax.set_xlabel('Current Draw (A)')
@@ -109,11 +94,11 @@ for voltage in DA.df['Applied Voltage (v)'].unique():
     df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage]
     fig, ax = plt.subplots()
     df_v = df_v.sort_values(by='Current Draw (A)')
-    coefficients = np.polyfit(df_v['Current Draw (A)'], df_v['Tach Reading (RPM)'], 1)
-    polynomial = np.poly1d(coefficients)
+    coefficients_Current_vs_RPM = np.polyfit(df_v['Current Draw (A)'], df_v['Tach Reading (RPM)'], 1)
+    polynomial = np.poly1d(coefficients_Current_vs_RPM)
     #calculate K_e for each voltage level and append to list
-    K_e.append(-voltage/(coefficients[0]* (2 * np.pi / 60)))
-    plt.plot(df_v['Current Draw (A)'], polynomial(df_v['Current Draw (A)']), label=f'Fit: {coefficients[0]:.6f}x + {coefficients[1]:.4f}')
+    K_e.append(-voltage/(coefficients_Current_vs_RPM[0]* (2 * np.pi / 60)))
+    plt.plot(df_v['Current Draw (A)'], polynomial(df_v['Current Draw (A)']), label=f'Fit: {coefficients_Current_vs_RPM[0]:.6f}x + {coefficients_Current_vs_RPM[1]:.4f}')
     ax.scatter(df_v['Current Draw (A)'], df_v['Tach Reading (RPM)'])
     plt.legend()
     ax.set_xlabel('Current Draw (A)')
@@ -122,8 +107,33 @@ for voltage in DA.df['Applied Voltage (v)'].unique():
     plt.savefig(os.path.join(my_path, f'Plots/RPM_vs_Current/RPM_vs_Current_{voltage}V.png'))
 plt.show()
 
+#plot speed vs efficiency for each applied voltage
+for voltage in DA.df['Applied Voltage (v)'].unique():
+    df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage]
+    fig, ax = plt.subplots()
+    ax.scatter(df_v['Tach Reading (RPM)'], df_v['Efficiency'])
+    ax.set_xlabel('RPM')
+    ax.set_ylabel('Efficiency')
+    plt.title(f'Efficiency vs RPM for {voltage} V')
+    plt.savefig(os.path.join(my_path, f'Plots/Efficiency_vs_RPM/Efficiency_vs_RPM_{voltage}V.png'))
 
+# eff = (stall_torque - coeff_current_vs_torque[1])*speed/(coeff_current_vs_RPM[0]*voltage)
 
+#plot efficiency vs current load for each applied voltage using the above formula
+
+for voltage in DA.df['Applied Voltage (v)'].unique():
+    df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage]
+    fig, ax = plt.subplots()
+    df_v = df_v.sort_values(by='Current Draw (A)')
+    coefficients_Current_vs_Torque = np.polyfit(df_v['Current Draw (A)'], df_v['Torque (N-m)'], 1)
+    coefficients_Current_vs_RPM = np.polyfit(df_v['Current Draw (A)'], df_v['Tach Reading (RPM)'], 1)
+    stall_torque = coefficients_Current_vs_Torque[1]
+    plt.plot(df_v['Current Draw (A)'], (stall_torque - coefficients_Current_vs_Torque[1])*df_v['Tach Reading (RPM)']/(coefficients_Current_vs_RPM[0]*voltage))
+    ax.set_xlabel('Current Draw (A)')
+    ax.set_ylabel('Efficiency')
+    plt.title(f'Efficiency vs Current Draw for {voltage} V')
+    plt.savefig(os.path.join(my_path, f'Plots/Efficiency_vs_Current/Efficiency_vs_Current_{voltage}V.png'))
+plt.show()
 
 #add motor properties to text file and print the file
 with open('Motor_Properties.txt', 'w') as f:
@@ -132,6 +142,38 @@ with open('Motor_Properties.txt', 'w') as f:
     f.write("The peak efficiency is " + str(DA.df['Efficiency'].max()) + " at a voltage of " + str(DA.df['Applied Voltage (v)'][DA.df['Efficiency'].idxmax()]) + "\n")
     f.write("The mean Back EMF constant is: " + str(np.mean(K_e)) + " V-s/rad\n")
     f.write("The average resistance is: " + str(DA.average_resistance) + " Ohms\n")
+
+# eff = (stall_torque - coeff_current_vs_torque[1])*speed/(coeff_current_vs_RPM[0]*voltage)
+#plot efficiency vs speed for each applied voltage using the above formula
+
+for voltage in DA.df['Applied Voltage (v)'].unique():
+    df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage].sort_values(by='Tach Reading (RPM)')
+    fig, ax = plt.subplots()
+    coefficients_RPM_vs_Torque = np.polyfit(df_v['Tach Reading (RPM)'], df_v['Torque (N-m)'], 1)
+    coefficients_Current_vs_RPM = np.polyfit(df_v['Tach Reading (RPM)'], df_v['Current Draw (A)'], 1)
+    stall_torque = coefficients_RPM_vs_Torque[1]
+    print(f"Voltage: {voltage}")
+    print(f"Stall Torque: {stall_torque}")
+    print(f"RPM vs Torque Coefficients: {coefficients_RPM_vs_Torque}")
+    print(f"Current vs RPM Coefficients: {coefficients_Current_vs_RPM}")
+
+    torque_at_rpm = stall_torque + coefficients_RPM_vs_Torque[0] * df_v['Tach Reading (RPM)']
+    current_at_rpm = coefficients_Current_vs_RPM[0] * df_v['Tach Reading (RPM)'] + coefficients_Current_vs_RPM[1]
+    power_output = torque_at_rpm * df_v['Tach Reading (RPM)'] * (2*np.pi/60)
+    power_input = current_at_rpm * voltage
+    eff = power_output / power_input
+    RPM_range = np.linspace(df_v['Tach Reading (RPM)'].min(), df_v['Tach Reading (RPM)'].max(), len(eff))
+    ax.scatter(RPM_range, eff, label = r"From Trendline Coeff: $\eta = \frac{(\tau_{stall} \cdot + B\omega)\cdot \omega}{(A\omega + \omega_{0})*V}$ ")
+    #plot direct efficiency calculation
+    ax.scatter(df_v['Tach Reading (RPM)'], df_v['Efficiency'], label = r'Direct from Data: $\eta = \frac{\tau \cdot \omega}{I \cdot V}$')
+    plt.legend()
+    ax.set_ylim(0, max(eff) + 0.1)
+    ax.set_xlabel('RPM')
+    ax.set_ylabel('Efficiency')
+    plt.title(f'Efficiency vs RPM for {voltage} V')
+    plt.savefig(os.path.join(my_path, f'Plots/Efficiency_vs_RPM/Efficiency_vs_RPM_{voltage}V.png'))
+plt.show()
+    
 
 with open('Motor_Properties.txt', 'r') as f:
     print(f.read())
