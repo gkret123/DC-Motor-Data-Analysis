@@ -33,12 +33,40 @@ for voltage in DA.df['Applied Voltage (v)'].unique():
             power_output.iloc[max_power_index],
             f"Max Power: {power_output.iloc[max_power_index]:.2f} W \n at {df_v['Tach Reading (RPM)'].iloc[max_power_index]} RPM",
             fontsize=11)
-    
+
     plt.legend()
     ax.set_xlabel('RPM')
     ax.set_ylabel('Mechanical Power (W)')
     plt.title(f'Power vs RPM for {voltage} V')
     plt.savefig(os.path.join(my_path, f'Plots/Power_vs_RPM/Power_vs_RPM_{voltage}V.png'))
+#plt.show()
+
+voltages = [5.0, 9.53, 11.0]
+fig, ax = plt.subplots(figsize=(20, 12))
+for voltage in voltages:
+    df_v_3 = DA.df[DA.df['Applied Voltage (v)'] == voltage].sort_values(by='Tach Reading (RPM)')
+    coeffs_RPM_vs_Torque = np.polyfit(df_v_3['Tach Reading (RPM)'], df_v_3['Torque (N-m)'], 1)
+    coeffs_Current_vs_RPM = np.polyfit(df_v_3['Tach Reading (RPM)'], df_v_3['Current Draw (A)'], 1)
+    stall_torque = coeffs_RPM_vs_Torque[1]
+    
+    torque_at_rpm = stall_torque + coeffs_RPM_vs_Torque[0] * df_v_3['Tach Reading (RPM)']
+    current_at_rpm = coeffs_Current_vs_RPM[0] * df_v_3['Tach Reading (RPM)'] + coeffs_Current_vs_RPM[1]
+    power_output = torque_at_rpm * df_v_3['Tach Reading (RPM)'] * (2 * np.pi / 60)
+    power_input = current_at_rpm * voltage
+    eff = power_output / power_input
+    
+    ax.scatter(df_v_3['Tach Reading (RPM)'], power_output, label="Mechanical Power Output")
+
+    max_power_index = np.argmax(power_output)
+
+    #add max power point and its corresponding torque and RPM to the legend
+    ax.scatter(df_v_3['Tach Reading (RPM)'].iloc[max_power_index], power_output.iloc[max_power_index],
+               label=f'Max Power: {power_output.iloc[max_power_index]:.2f} W at {df_v_3["Tach Reading (RPM)"].iloc[max_power_index]} RPM for {voltage} V')
+ax.set_xlabel('RPM')
+ax.set_ylabel('Mechanical Power Output (W)')
+ax.legend(title='Applied Voltage')
+plt.title('Mechanical Power Output vs RPM for 5V, 9.53V, and 11V')
+plt.savefig(os.path.join(my_path, 'Plots/Power_vs_RPM/Power_vs_RPM_3_Voltages.png'))
 #plt.show()
 
 # Plot Torque vs RPM for each applied voltage (all on a single graph)
@@ -95,6 +123,22 @@ for voltage in DA.df['Applied Voltage (v)'].unique():
     plt.savefig(os.path.join(my_path, f'Plots/Torque_vs_RPM/Torque_vs_RPM_{voltage}V.png'))
 #plt.show()
 
+voltages = [5.0, 9.53, 11.0]
+fig, ax = plt.subplots(figsize=(20, 12))
+for voltage in voltages:
+    df_v_3 = DA.df[DA.df['Applied Voltage (v)'] == voltage]
+    coeffs_RPM_vs_Torque = np.polyfit(df_v_3['Tach Reading (RPM)'], df_v_3['Torque (N-m)'], 1)
+    poly = np.poly1d(coeffs_RPM_vs_Torque)
+    plt.plot(df_v_3['Tach Reading (RPM)'], poly(df_v_3['Tach Reading (RPM)']),
+             label=f'Fit: {coeffs_RPM_vs_Torque[0]:.6f}x + {coeffs_RPM_vs_Torque[1]:.4f}')
+    ax.scatter(df_v_3['Tach Reading (RPM)'], df_v_3['Torque (N-m)'], label=f'{voltage} V')
+ax.set_xlabel('RPM')
+ax.set_ylabel('Torque (N-m)')
+ax.legend(title='Applied Voltage')
+plt.title('Torque vs RPM for 5V, 9.53V, and 11V')
+plt.savefig(os.path.join(my_path, 'Plots/Torque_vs_RPM/Torque_vs_RPM_3_Voltages.png'))
+#plt.show()
+
 # Plot Torque vs Current Draw for each voltage and record the torque constant
 torque_constant = []
 for voltage in DA.df['Applied Voltage (v)'].unique():
@@ -113,6 +157,22 @@ for voltage in DA.df['Applied Voltage (v)'].unique():
     plt.savefig(os.path.join(my_path, f'Plots/Torque_vs_Current/Torque_vs_Current_{voltage}V.png'))
 #plt.show()
 
+voltages = [5.0, 9.53, 11.0]
+fig, ax = plt.subplots(figsize=(20, 12))
+for voltage in voltages:
+    df_v_3 = DA.df[DA.df['Applied Voltage (v)'] == voltage]
+    coeffs_RPM_vs_Torque = np.polyfit(df_v_3['Current Draw (A)'], df_v_3['Torque (N-m)'], 1)
+    poly = np.poly1d(coeffs_RPM_vs_Torque)
+    plt.plot(df_v_3['Current Draw (A)'], poly(df_v_3['Current Draw (A)']),
+             label=f'Fit: {coeffs_RPM_vs_Torque[0]:.6f}x + {coeffs_RPM_vs_Torque[1]:.4f}')
+    ax.scatter(df_v_3['Current Draw (A)'], df_v_3['Torque (N-m)'], label=f'{voltage} V')
+ax.set_xlabel('Current Draw (A)')
+ax.set_ylabel('Torque (N-m)')
+ax.legend(title='Applied Voltage')
+plt.title('Torque vs Current for 5V, 9.53V, and 11V')
+plt.savefig(os.path.join(my_path, 'Plots/Torque_vs_Current/Torque_vs_Current_3_Voltages.png'))
+#plt.show()
+
 # Plot RPM vs Current Draw for each voltage and calculate Back EMF constant
 K_e = []  # Back EMF constant
 for voltage in DA.df['Applied Voltage (v)'].unique():
@@ -129,6 +189,21 @@ for voltage in DA.df['Applied Voltage (v)'].unique():
     ax.set_ylabel('RPM')
     plt.title(f'RPM vs Current Draw for {voltage} V')
     plt.savefig(os.path.join(my_path, f'Plots/RPM_vs_Current/RPM_vs_Current_{voltage}V.png'))
+#plt.show()
+voltages = [5.0, 9.53, 11.0]
+fig, ax = plt.subplots(figsize=(20, 12))
+for voltage in voltages:
+    df_v_3 = DA.df[DA.df['Applied Voltage (v)'] == voltage]
+    coeffs_RPM_vs_Torque = np.polyfit(df_v_3['Current Draw (A)'], df_v_3['Tach Reading (RPM)'], 1)
+    poly = np.poly1d(coeffs_RPM_vs_Torque)
+    plt.plot(df_v_3['Current Draw (A)'], poly(df_v_3['Current Draw (A)']),
+             label=f'Fit: {coeffs_RPM_vs_Torque[0]:.6f}x + {coeffs_RPM_vs_Torque[1]:.4f}')
+    ax.scatter(df_v_3['Current Draw (A)'], df_v_3['Tach Reading (RPM)'], label=f'{voltage} V')
+ax.set_xlabel('Current Draw (A)')
+ax.set_ylabel('Tach Reading (RPM)')
+ax.legend(title='Applied Voltage')
+plt.title('RPM vs Current for 5V, 9.53V, and 11V')
+plt.savefig(os.path.join(my_path, 'Plots/RPM_vs_Current/RPM_vs_Current_3_Voltages.png'))
 #plt.show()
 
 # Plot Efficiency vs Current Draw for each voltage
