@@ -5,7 +5,7 @@ import seaborn as sns
 import os
 
 # Load the Excel file into a df
-file_path = "DC-Motor-Data-Analysis\GK_Data_M1.xlsx"
+file_path = "GK_Data_M1.xlsx"
 df = pd.read_excel(file_path)
 
 # Display the first few rows 
@@ -49,5 +49,40 @@ average_resistance = df['Resistance (Ohms)'].mean()
 print("\nMissing values per column after filling:")
 print(df.isnull().sum())
 
+#
+#drop all data associated with the 10.5 volt data point
+#df = df[df['Applied Voltage (v)'] != 10.5]
+
 #save to new excel file
 df.to_excel("GK_Data_M1_filled.xlsx", index=False)
+
+"""
+# Calculate Z-scores
+df['Z_Score_A'] = (df['A '] - df['A'].mean()) / df['A'].std()
+# Identify outliers
+outliers = df[np.abs(df['Z_Score_A']) > 3]
+print(outliers)
+# Drop outliers
+df = df[np.abs(df['Z_Score_A']) < 3]
+"""
+
+#find outliers for all relevant columns and returnt the coutliers, the z score and the column name
+def find_outliers(df, column):
+    Z_Score = (df[column] - df[column].mean()) / df[column].std()
+    outliers = df[np.abs(Z_Score) > 2.5]
+    return outliers, Z_Score
+#execute the function 
+outliers, Z_Score = find_outliers(df, 'Scale Reading (g)')
+print("Outliers in the scale reading data: \n", outliers)
+outliers, Z_Score = find_outliers(df, 'Current Draw (A)')
+print("Outliers in the Current Draw data: \n", outliers)
+outliers, Z_Score = find_outliers(df, 'Tach Reading (RPM)')
+print("Outliers in the tachometer data: \n", outliers)
+outliers, Z_Score = find_outliers(df, 'Torque (N-m)')
+print("Outliers in the torque data: \n", outliers)
+outliers, Z_Score = find_outliers(df, 'Efficiency')
+print("Outliers in the efficiency data: \n", outliers)
+
+
+print("Data Processing Complete")
+
