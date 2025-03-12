@@ -212,8 +212,11 @@ for voltage in DA.df['Applied Voltage (v)'].unique():
     max_eff_rpm = df_v['Tach Reading (RPM)'][max_eff_index]
     ax.scatter(max_eff_torque, df_v['Efficiency'].max(), label=f'Max Efficiency: {df_v["Efficiency"].max():.2f} at '
                                                              f'{max_eff_torque:.2f} N-m and {max_eff_rpm} RPM')
+    #add stall torque to legend for each voltage
+    ax.scatter(stall_torque, 0, label=f'Stall Torque: {stall_torque:.2f} N-m')
+    
     plt.legend()
-    ax.set_ylim(0, df_v['Efficiency'].max() + 0.1)
+    ax.set_ylim(-0.05, df_v['Efficiency'].max() + 0.1)
     ax.set_xlabel('Torque (N-m)')
     ax.set_ylabel('Efficiency')
     plt.title(f'Efficiency vs Torque for {voltage} V')
