@@ -51,7 +51,49 @@ print(df.isnull().sum())
 
 #
 #drop all data associated with the 10.5 volt data point
-#df = df[df['Applied Voltage (v)'] != 10.5]
+df = df[df['Applied Voltage (v)'] != 10.5]
+
+#find outliers for all relevant columns and returnt the coutliers, the z score and the column name
+Z_score_lim = 2
+def find_outliers(df, column):
+    Z_Score = (df[column] - df[column].mean()) / df[column].std()
+    #add the z score to the dataframe
+    df[f'Z_Score_{column}'] = Z_Score
+    outliers = df[np.abs(Z_Score) > Z_score_lim]
+    return outliers, Z_Score
+
+#execute the function 
+outliers_Scale, Z_Score_Scale = find_outliers(df, 'Scale Reading (g)')
+print("Outliers in the scale reading data: \n", outliers_Scale)
+outliers_Current, Z_Score_Current = find_outliers(df, 'Current Draw (A)')
+print("Outliers in the Current Draw data: \n", outliers_Current)
+outliers_Tach, Z_Score_Tach = find_outliers(df, 'Tach Reading (RPM)')
+print("Outliers in the Tach Reading data: \n", outliers_Tach)
+outliers_Torque, Z_Score_Torque = find_outliers(df, 'Torque (N-m)')
+print("Outliers in the Torque data: \n", outliers_Torque)
+outliers_Efficiency, Z_Score_Efficiency = find_outliers(df, 'Efficiency')
+print("Outliers in the Efficiency data: \n", outliers_Efficiency)
+
+"""
+outliers, Z_Score = find_outliers(df, 'Tach Reading (RPM)')
+print("Outliers in the tachometer data: \n", outliers)
+outliers, Z_Score = find_outliers(df, 'Torque (N-m)')
+print("Outliers in the torque data: \n", outliers)
+outliers, Z_Score = find_outliers(df, 'Efficiency')
+print("Outliers in the efficiency data: \n", outliers)
+"""
+#use the z-score df columns to remove all rows with outliers from the data for each row and z score
+if 'Z_Score_Scale Reading (g)' in df.columns:
+    df = df[np.abs(df['Z_Score_Scale Reading (g)']) < Z_score_lim]
+    print("Removed outliers in Scale Reading (g) \n")
+if 'Z_Score_Current Draw (A)' in df.columns:
+    df = df[np.abs(df['Z_Score_Current Draw (A)']) < Z_score_lim]
+    print("Removed outliers in Current Draw (A) \n")
+if 'Z_Score_Tach Reading (RPM)' in df.columns:
+    df = df[np.abs(df['Z_Score_Tach Reading (RPM)']) < Z_score_lim]
+    print("Removed outliers in Tach Reading (RPM) \n")
+
+
 
 #save to new excel file
 df.to_excel("GK_Data_M1_filled.xlsx", index=False)
@@ -66,22 +108,6 @@ print(outliers)
 df = df[np.abs(df['Z_Score_A']) < 3]
 """
 
-#find outliers for all relevant columns and returnt the coutliers, the z score and the column name
-def find_outliers(df, column):
-    Z_Score = (df[column] - df[column].mean()) / df[column].std()
-    outliers = df[np.abs(Z_Score) > 2.5]
-    return outliers, Z_Score
-#execute the function 
-outliers, Z_Score = find_outliers(df, 'Scale Reading (g)')
-print("Outliers in the scale reading data: \n", outliers)
-outliers, Z_Score = find_outliers(df, 'Current Draw (A)')
-print("Outliers in the Current Draw data: \n", outliers)
-outliers, Z_Score = find_outliers(df, 'Tach Reading (RPM)')
-print("Outliers in the tachometer data: \n", outliers)
-outliers, Z_Score = find_outliers(df, 'Torque (N-m)')
-print("Outliers in the torque data: \n", outliers)
-outliers, Z_Score = find_outliers(df, 'Efficiency')
-print("Outliers in the efficiency data: \n", outliers)
 
 
 print("Data Processing Complete")
