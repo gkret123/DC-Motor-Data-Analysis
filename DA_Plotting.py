@@ -305,11 +305,6 @@ for voltage in DA.df['Applied Voltage (v)'].unique():
     coeffs_RPM_vs_Torque = np.polyfit(df_v['Tach Reading (RPM)'], df_v['Torque (N-m)'], 1)
     coeffs_Current_vs_RPM = np.polyfit(df_v['Tach Reading (RPM)'], df_v['Current Draw (A)'], 1)
     stall_torque = coeffs_RPM_vs_Torque[1]
-    
-    print(f"Voltage: {voltage}")
-    print(f"Stall Torque: {stall_torque}")
-    print(f"RPM vs Torque Coefficients: {coeffs_RPM_vs_Torque}")
-    print(f"Current vs RPM Coefficients: {coeffs_Current_vs_RPM}")
 
     torque_at_rpm = stall_torque + coeffs_RPM_vs_Torque[0] * df_v['Tach Reading (RPM)']
     current_at_rpm = coeffs_Current_vs_RPM[0] * df_v['Tach Reading (RPM)'] + coeffs_Current_vs_RPM[1]
@@ -342,7 +337,33 @@ with open('Motor_Properties.txt', 'w') as f:
 with open('Motor_Properties.txt', 'r') as f:
     print(f.read())
 
-print(f"The maximum efficiency is {DA.df['Efficiency'].max()} at a voltage of "
-      f"{DA.df['Applied Voltage (v)'][DA.df['Efficiency'].idxmax()]} V and occurs at a speed of "
-      f"{DA.df['Tach Reading (RPM)'][DA.df['Efficiency'].idxmax()]} RPM and a torque of "
-      f"{DA.df['Torque (N-m)'][DA.df['Efficiency'].idxmax()]} N-m")
+for voltage in DA.df['Applied Voltage (v)'].unique():
+    df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage]
+    print(f"For {voltage} V, the maximum efficiency is {df_v['Efficiency'].max():.3f} at a speed of "
+          f"{df_v['Tach Reading (RPM)'][df_v['Efficiency'].idxmax()]:.1f} RPM and a torque of "
+          f"{df_v['Torque (N-m)'][df_v['Efficiency'].idxmax()]:.3f} N-m")
+
+#list all outliers that were excluded
+print("The following outliers were excluded from the data for having a Z-score > 2 (meaning the value was greater than 2 standard deviations above the mean):")
+print("Outliers in the scale reading data: \n", DA.outliers_Scale)
+print("Outliers in the Current Draw data: \n", DA.outliers_Current)
+print("Outliers in the Tach Reading data: \n", DA.outliers_Tach)
+
+# export outliers to text file
+with open('Outliers.txt', 'w') as f:
+    f.write("The following outliers were excluded from the data for having a Z-score > 2 (meaning the value was greater than 2 standard deviations above the mean):\n")
+    f.write("Outliers in the scale reading data: \n" + str(DA.outliers_Scale) + "\n")
+    f.write("Outliers in the Current Draw data: \n" + str(DA.outliers_Current) + "\n")
+    f.write("Outliers in the Tach Reading data: \n" + str(DA.outliers_Tach) + "\n")
+
+# Plot the Z-scores in histgram/s
+fig, ax = plt.subplots()
+ax.hist(DA.df['Z_Score_Scale Reading (g)'], bins=20, alpha=0.5, label='Scale Reading (g)')
+ax.hist(DA.df['Z_Score_Current Draw (A)'], bins=20, alpha=0.5, label='Current Draw (A)')
+ax.hist(DA.df['Z_Score_Tach Reading (RPM)'], bins=20, alpha=0.5, label='Tach Reading (RPM)')
+
+ax.set_xlabel('Z-Score')
+ax.set_ylabel('Frequency')
+ax.legend()
+plt.title('Z-Scores for Scale Reading, Current Draw, and Tach Reading')
+plt.savefig(os.path.join(my_path, 'Plots/Z_Scores.png'))
