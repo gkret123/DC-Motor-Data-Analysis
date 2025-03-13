@@ -367,3 +367,17 @@ ax.set_ylabel('Frequency')
 ax.legend()
 plt.title('Z-Scores for Scale Reading, Current Draw, and Tach Reading')
 plt.savefig(os.path.join(my_path, 'Plots/Z_Scores.png'))
+
+#print stall torque data at each voltage
+for voltage in DA.df['Applied Voltage (v)'].unique():
+    df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage].sort_values(by='Tach Reading (RPM)')
+    coeffs_RPM_vs_Torque = np.polyfit(df_v['Tach Reading (RPM)'], df_v['Torque (N-m)'], 1)
+    stall_torque = coeffs_RPM_vs_Torque[1]
+    print(f"For {voltage} V, the stall torque is {stall_torque:.3f} N-m")
+
+#print the no load speed for each voltage
+for voltage in DA.df['Applied Voltage (v)'].unique():
+    df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage].sort_values(by='Current Draw (A)')
+    coeffs_Current_vs_RPM = np.polyfit(df_v['Current Draw (A)'], df_v['Tach Reading (RPM)'], 1)
+    no_load_speed = coeffs_Current_vs_RPM[1]
+    print(f"For {voltage} V, the no load speed is {no_load_speed:.3f} RPM")

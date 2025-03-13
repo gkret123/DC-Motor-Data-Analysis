@@ -1,22 +1,22 @@
 The following outliers were excluded from the data for having a Z-score > 2 (meaning the value was greater than 2 standard deviations above the mean):
 Outliers in the scale reading data: 
-    Test #  Scale Reading (g)  Tach Reading (RPM)  ...  Unnamed: 14  Resistance (Ohms)  Z_Score_Scale Reading (g)
-62      63              284.0                20.0  ...          NaN          12.328767                   2.064267
-97      98              295.0                21.0  ...           B7          12.500000                   2.206716
+    Test #  Scale Reading (g)  Tach Reading (RPM)  Current Draw (A)  Torque (N-m)  ...  Relative Error Electrical Power  Relative Error Torque  Unnamed: 14  Resistance (Ohms)  Z_Score_Scale Reading (g)
+62      63              284.0                20.0              0.73      0.373714  ...                         0.045148               0.000142          NaN          12.328767                   2.064267
+97      98              295.0                21.0              0.80      0.373926  ...                         0.050160               0.000144           B7          12.500000                   2.206716
 
 [2 rows x 17 columns]
 Outliers in the Current Draw data: 
-     Test #  Scale Reading (g)  Tach Reading (RPM)  ...  Resistance (Ohms)  Z_Score_Scale Reading (g)  Z_Score_Current Draw (A)
-97       98              295.0                21.0  ...          12.500000                   2.206716                  2.205164
-152     153              261.5                34.7  ...          13.924051                   1.772893                  2.155884
+     Test #  Scale Reading (g)  Tach Reading (RPM)  Current Draw (A)  Torque (N-m)  ...  Relative Error Torque  Unnamed: 14  Resistance (Ohms)  Z_Score_Scale Reading (g)  Z_Score_Current Draw (A)
+97       98              295.0                21.0              0.80      0.373926  ...               0.000144           B7          12.500000                   2.206716                  2.205164
+152     153              261.5                34.7              0.79      0.314059  ...               0.000123          NaN          13.924051                   1.772893                  2.155884
 
 [2 rows x 18 columns]
 Outliers in the Tach Reading data: 
-     Test #  Scale Reading (g)  Tach Reading (RPM)  ...  Z_Score_Scale Reading (g)  Z_Score_Current Draw (A)  Z_Score_Tach Reading (RPM)
-114     115              30.00               124.0  ...                  -1.225024                 -1.195116                    2.019016
-115     116              26.00               125.0  ...                  -1.276824                 -1.244395                    2.051536
-134     135              35.30               134.5  ...                  -1.156389                 -1.145836                    2.360476
-136     137              44.70               130.4  ...                  -1.034660                 -1.022638                    2.227144
-137     138              51.75               124.0  ...                  -0.943362                 -0.850160                    2.019016
+     Test #  Scale Reading (g)  Tach Reading (RPM)  Current Draw (A)  Torque (N-m)  ...  Unnamed: 14  Resistance (Ohms)  Z_Score_Scale Reading (g)  Z_Score_Current Draw (A)  Z_Score_Tach Reading (RPM)
+114     115              30.00               124.0             0.110     -0.000424  ...          NaN          90.909091                  -1.225024                 -1.195116                    2.019016
+115     116              26.00               125.0             0.100     -0.006074  ...          NaN         100.000000                  -1.276824                 -1.244395                    2.051536
+134     135              35.30               134.5             0.120     -0.010029  ...           B5          91.666667                  -1.156389                 -1.145836                    2.360476
+136     137              44.70               130.4             0.145      0.003439  ...          NaN          75.862069                  -1.034660                 -1.022638                    2.227144
+137     138              51.75               124.0             0.180      0.013539  ...          NaN          61.111111                  -0.943362                 -0.850160                    2.019016
 
 [5 rows x 19 columns]
