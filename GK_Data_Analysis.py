@@ -128,7 +128,7 @@ if 'Z_Score_Tach Reading (RPM)' in df.columns:
         df.loc[sub.index, 'Standardized Residuals'] = std_resid
         
         # Identify outliers using the threshold (absolute standardized residual >= 2)
-        group_outlier_mask = np.abs(std_resid) >= 2
+        group_outlier_mask = np.abs(std_resid) >= 1.5
         global_outlier_mask[sub.index] = group_outlier_mask
 
     # Extract and display the outliers for the Torque data across all voltage groups

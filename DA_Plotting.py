@@ -355,23 +355,7 @@ for voltage in DA.df['Applied Voltage (v)'].unique():
     plt.savefig(os.path.join(my_path, f'Plots/MechPwr_Vs_Efficiency/Efficiency_vs_Power_{voltage}V.png'))
 #plt.show()
 
-# Save motor properties to a text file and print its contents
-with open('Motor_Properties.txt', 'w') as f:
-    f.write("Properties of the motor:\n")
-    f.write("The mean Motor Torque Constant is: " + str(np.mean(torque_constant)) + " N-m/A\n")
-    f.write("The peak efficiency is " + str(DA.df['Efficiency'].max()) +
-            " at a voltage of " + str(DA.df['Applied Voltage (v)'][DA.df['Efficiency'].idxmax()]) + "\n")
-    f.write("The mean Back EMF constant is: " + str(np.mean(K_e)) + " V-s/rad\n")
-    f.write("The average resistance is: " + str(DA.average_resistance) + " Ohms\n")
 
-with open('Motor_Properties.txt', 'r') as f:
-    print(f.read())
-
-for voltage in DA.df['Applied Voltage (v)'].unique():
-    df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage]
-    print(f"For {voltage} V, the maximum efficiency is {df_v['Efficiency'].max():.3f} at a speed of "
-          f"{df_v['Tach Reading (RPM)'][df_v['Efficiency'].idxmax()]:.1f} RPM and a torque of "
-          f"{df_v['Torque (N-m)'][df_v['Efficiency'].idxmax()]:.3f} N-m")
 
 
 
@@ -386,6 +370,32 @@ ax.set_ylabel('Frequency')
 ax.legend()
 plt.title('Z-Scores for Scale Reading, Current Draw, and Tach Reading')
 plt.savefig(os.path.join(my_path, 'Plots/Z_Scores.png'))
+
+
+# Plot the outliers grouped by voltage for clarity
+import matplotlib.cm as cm
+# Get unique voltage levels from the dataset
+voltages = sorted(DA.df['Applied Voltage (v)'].unique())
+colors = cm.rainbow(np.linspace(0, 1, len(voltages)))
+
+fig, ax = plt.subplots()
+# Optionally, plot the full data in light gray for context
+ax.scatter(DA.df['Tach Reading (RPM)'], DA.df['Torque (N-m)'], color='lightgray', label='Data', alpha=0.5)
+
+# Plot outliers for each voltage level with a unique color
+for i, voltage in enumerate(voltages):
+    # Filter outliers for the current voltage (assumes the 'Applied Voltage (v)' column exists in outliers_Torque)
+    outliers_voltage = DA.outliers_Torque[DA.outliers_Torque['Applied Voltage (v)'] == voltage]
+    ax.scatter(outliers_voltage['Tach Reading (RPM)'], outliers_voltage['Torque (N-m)'],
+               color=colors[i], edgecolor='black', s=100,
+               label=f'Outlier(s) at {voltage} V')
+
+ax.set_xlabel('RPM')
+ax.set_ylabel('Torque (N-m)')
+plt.title('Outliers in Torque vs RPM by Voltage')
+plt.legend()
+plt.savefig(os.path.join(my_path, 'Plots/Outliers_Torque_vs_RPM_by_Voltage.png'))
+
 
 #list all outliers that were excluded
 print("The following outliers were excluded from the data for having a Z-score > 2 (meaning the value was greater than 2 standard deviations above the mean):")
@@ -403,16 +413,81 @@ with open('Outliers.txt', 'w') as f:
     f.write("Outliers in the Tach Reading data: \n" + str(DA.outliers_Tach) + "\n")
     f.write("These outliers were excluded due to them being too far from the line fit to the torque data. This is called a residual error: \n" + str(DA.outliers_Torque) + "\n")
 
-#print stall torque data at each voltage
-for voltage in DA.df['Applied Voltage (v)'].unique():
-    df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage].sort_values(by='Tach Reading (RPM)')
-    coeffs_RPM_vs_Torque = np.polyfit(df_v['Tach Reading (RPM)'], df_v['Torque (N-m)'], 1)
-    stall_torque = coeffs_RPM_vs_Torque[1]
-    print(f"For {voltage} V, the stall torque is {stall_torque:.3f} N-m")
 
-#print the no load speed for each voltage
-for voltage in DA.df['Applied Voltage (v)'].unique():
-    df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage].sort_values(by='Current Draw (A)')
-    coeffs_Current_vs_RPM = np.polyfit(df_v['Current Draw (A)'], df_v['Tach Reading (RPM)'], 1)
-    no_load_speed = coeffs_Current_vs_RPM[1]
-    print(f"For {voltage} V, the no load speed is {no_load_speed:.3f} RPM")
+        
+    #print stall torque data at each voltage
+    for voltage in DA.df['Applied Voltage (v)'].unique():
+        df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage].sort_values(by='Tach Reading (RPM)')
+        coeffs_RPM_vs_Torque = np.polyfit(df_v['Tach Reading (RPM)'], df_v['Torque (N-m)'], 1)
+        stall_torque = coeffs_RPM_vs_Torque[1]
+        print(f"For {voltage} V, the stall torque is {stall_torque:.3f} N-m")
+
+    #print the no load speed for each voltage
+    for voltage in DA.df['Applied Voltage (v)'].unique():
+        df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage].sort_values(by='Current Draw (A)')
+        coeffs_Current_vs_RPM = np.polyfit(df_v['Current Draw (A)'], df_v['Tach Reading (RPM)'], 1)
+        no_load_speed = coeffs_Current_vs_RPM[1]
+        print(f"For {voltage} V, the no load speed is {no_load_speed:.3f} RPM")
+        
+    # New code: Tabulate all the motor performance data in a single table
+
+    table_data = []
+    for voltage in sorted(DA.df['Applied Voltage (v)'].unique()):
+        df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage]
+
+        # Maximum Efficiency Data
+        max_eff = df_v['Efficiency'].max()
+        idx = df_v['Efficiency'].idxmax()
+        max_eff_rpm = df_v.loc[idx, 'Tach Reading (RPM)']
+        max_eff_torque = df_v.loc[idx, 'Torque (N-m)']
+
+        # Stall Torque Data
+        df_v_sorted = df_v.sort_values(by='Tach Reading (RPM)')
+        coeffs_RPM_vs_Torque = np.polyfit(df_v_sorted['Tach Reading (RPM)'], df_v_sorted['Torque (N-m)'], 1)
+        stall_torque = coeffs_RPM_vs_Torque[1]
+
+        # No Load Speed Data
+        df_v_current = df_v.sort_values(by='Current Draw (A)')
+        coeffs_Current_vs_RPM = np.polyfit(df_v_current['Current Draw (A)'], df_v_current['Tach Reading (RPM)'], 1)
+        no_load_speed = coeffs_Current_vs_RPM[1]
+
+        table_data.append({
+            'Voltage (V)': voltage,
+            'Max Efficiency': round(max_eff, 3),
+            'Max Eff. RPM': round(max_eff_rpm, 1),
+            'Max Eff. Torque (N-m)': round(max_eff_torque, 3),
+            'Stall Torque (N-m)': round(stall_torque, 3),
+            'No Load RPM': round(no_load_speed, 3)
+        })
+with open('Motor_Properties.txt', 'w') as f:
+    f.write("Properties of the motor:\n")
+    f.write("The mean Motor Torque Constant is: " + str(np.mean(torque_constant)) + " N-m/A\n")
+    f.write("The peak efficiency is " + str(DA.df['Efficiency'].max()) +
+            " at a voltage of " + str(DA.df['Applied Voltage (v)'][DA.df['Efficiency'].idxmax()]) + "\n")
+    f.write("The mean Back EMF constant is: " + str(np.mean(K_e)) + " V-s/rad\n")
+    f.write("The average resistance is: " + str(DA.average_resistance) + " Ohms\n")
+
+# Save motor properties to a text file and print its contents
+with open('Motor_Properties.txt', 'w') as f:
+    f.write("Properties of the motor:\n")
+    f.write("The mean Motor Torque Constant is: " + str(np.mean(torque_constant)) + " N-m/A\n")
+    f.write("The peak efficiency is " + str(DA.df['Efficiency'].max()) +
+            " at a voltage of " + str(DA.df['Applied Voltage (v)'][DA.df['Efficiency'].idxmax()]) + "\n")
+    f.write("The mean Back EMF constant is: " + str(np.mean(K_e)) + " V-s/rad\n")
+    f.write("The average resistance is: " + str(DA.average_resistance) + " Ohms\n")
+
+    f.write("\nTabulated Motor Performance Data:\n")
+    f.write(pd.DataFrame(table_data).to_string(index=False))
+
+with open('Motor_Properties.txt', 'r') as f:
+    print(f.read())
+    # Print the maximum efficiency for each voltage level
+    for voltage in DA.df['Applied Voltage (v)'].unique():
+        df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage]
+        print(f"For {voltage} V, the maximum efficiency is {df_v['Efficiency'].max():.3f} at a speed of "
+              f"{df_v['Tach Reading (RPM)'][df_v['Efficiency'].idxmax()]:.1f} RPM and a torque of "
+              f"{df_v['Torque (N-m)'][df_v['Efficiency'].idxmax()]:.3f} N-m")
+        
+    df_table = pd.DataFrame(table_data)
+    print("\nTabulated Motor Performance Data:")
+    print(df_table.to_string(index=False))
