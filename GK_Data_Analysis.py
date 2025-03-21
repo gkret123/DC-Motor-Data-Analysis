@@ -54,7 +54,7 @@ print(df.isnull().sum())
 df = df[df['Applied Voltage (v)'] != 10.5]
 
 #find outliers for all relevant columns and returnt the coutliers, the z score and the column name
-Z_score_lim = 2
+Z_score_lim = 2.5
 def find_outliers(df, column):
     Z_Score = (df[column] - df[column].mean()) / df[column].std()
     #add the z score to the dataframe
@@ -74,14 +74,6 @@ print("Outliers in the Torque data: \n", outliers_Torque)
 outliers_Efficiency, Z_Score_Efficiency = find_outliers(df, 'Efficiency')
 print("Outliers in the Efficiency data: \n", outliers_Efficiency)
 
-"""
-outliers, Z_Score = find_outliers(df, 'Tach Reading (RPM)')
-print("Outliers in the tachometer data: \n", outliers)
-outliers, Z_Score = find_outliers(df, 'Torque (N-m)')
-print("Outliers in the torque data: \n", outliers)
-outliers, Z_Score = find_outliers(df, 'Efficiency')
-print("Outliers in the efficiency data: \n", outliers)
-"""
 #use the z-score df columns to remove all rows with outliers from the data for each row and z score
 if 'Z_Score_Scale Reading (g)' in df.columns:
     df = df[np.abs(df['Z_Score_Scale Reading (g)']) < Z_score_lim]
@@ -92,67 +84,41 @@ if 'Z_Score_Current Draw (A)' in df.columns:
 if 'Z_Score_Tach Reading (RPM)' in df.columns:
     df = df[np.abs(df['Z_Score_Tach Reading (RPM)']) < Z_score_lim]
     print("Removed outliers in Tach Reading (RPM) \n")
+    
+    #Z-score isnt enough, the data is not normally distributed, so we will use the standardized residuals
     # Apply the outlier removal strategy for Torque on a per-voltage basis
     from scipy.stats import linregress
 
     # Create a global outlier mask for Torque outliers across all voltage groups
     global_outlier_mask = pd.Series(False, index=df.index)
-
-    # Loop over each unique Applied Voltage
     for voltage in df['Applied Voltage (v)'].unique():
         # Subset the dataframe for the current voltage
         sub = df[df['Applied Voltage (v)'] == voltage]
-        
-        # Ensure there are enough data points to fit a regression line
-        if len(sub) < 2:
-            continue
-        
         # Fit a regression line for Torque vs Tach Reading within this voltage
         slope, intercept, r_value, p_value, std_err = linregress(sub['Tach Reading (RPM)'], sub['Torque (N-m)'])
-        
         # Calculate predicted torque and residuals
         predicted_torque = slope * sub['Tach Reading (RPM)'] + intercept
         residuals = sub['Torque (N-m)'] - predicted_torque
         sigma_tau = residuals.std()
-        
-        # Avoid division by zero
-        if sigma_tau == 0:
-            continue
-        
         # Calculate standardized residuals
         std_resid = residuals / sigma_tau
-        
         # Save the computed values back into the dataframe
         df.loc[sub.index, 'Predicted_Torque'] = predicted_torque
         df.loc[sub.index, 'Residuals'] = residuals
         df.loc[sub.index, 'Standardized Residuals'] = std_resid
-        
-        # Identify outliers using the threshold (absolute standardized residual >= 2)
+        # Identify outliers using the threshold (absolute standardized residual >= 1.5)
         group_outlier_mask = np.abs(std_resid) >= 1.5
         global_outlier_mask[sub.index] = group_outlier_mask
-
     # Extract and display the outliers for the Torque data across all voltage groups
     outliers_Torque = df[global_outlier_mask]
     print("Outliers in the Torque data for each voltage:")
     print(outliers_Torque)
     # Remove the outliers from the dataframe
     df = df[~global_outlier_mask]
-
 print("\nRemoved outliers in Torque (N-m).")
+
 #save to new excel file
 df.to_excel("GK_Data_M1_filled.xlsx", index=False)
-
-"""
-# Calculate Z-scores
-df['Z_Score_A'] = (df['A '] - df['A'].mean()) / df['A'].std()
-# Identify outliers
-outliers = df[np.abs(df['Z_Score_A']) > 3]
-print(outliers)
-# Drop outliers
-df = df[np.abs(df['Z_Score_A']) < 3]
-"""
-
-
 
 print("Data Processing Complete")
 

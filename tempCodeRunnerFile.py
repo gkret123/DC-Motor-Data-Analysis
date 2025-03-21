@@ -1,21 +1,24 @@
-# Derive a smooth torque_range and corresponding rpm_range using the linear relationship
-    num_points = 100
-    torque_range = np.linspace(df_v['Torque (N-m)'].min(), df_v['Torque (N-m)'].max(), num_points)
-    rpm_range = (torque_range - stall_torque) / coeffs_RPM_vs_Torque[0]
-    current_at_rpm = coeffs_Current_vs_RPM[0] * rpm_range + coeffs_Current_vs_RPM[1]
-    power_output = torque_range * rpm_range * (2 * np.pi / 60)
-    power_input = current_at_rpm * voltage
-    eff = power_output / power_input
-    
-    ax.plot(torque_range, eff,
-               label=r"From Trendline Coeff: $\eta = \frac{(\tau_{stall} + B\omega)\omega}{(A\omega + \omega_{0})V}$", color='red')
-    ax.scatter(df_v['Torque (N-m)'], df_v['Efficiency'],
-               label=r'Direct from Data: $\eta = \frac{\tau\omega}{I V}$')
-        #add max efficiency point and its corresponding torque and RPM in the legend
-    max_eff_index = df_v['Efficiency'].idxmax()
-    max_eff_torque = df_v['Torque (N-m)'][max_eff_index]
-    max_eff_rpm = df_v['Tach Reading (RPM)'][max_eff_index]
-    ax.scatter(max_eff_torque, df_v['Efficiency'].max(), label=f'Max Efficiency: {df_v["Efficiency"].max():.2f} at '
-                                                             f'{max_eff_torque:.2f} N-m and {max_eff_rpm} RPM')
-    #add stall torque to legend for each voltage
-    ax.scatter(stall_torque, 0, label=f'Stall Torque: {stall_torque:.2f} N-m')
+#plot the no load speed for each voltage using the tabulated motor performance data
+fig, ax = plt.subplots()
+df_table = pd.DataFrame(table_data)
+ax.scatter(df_table['Voltage (V)'], df_table['No Load RPM'], color='blue')
+ax.set_xlabel('Voltage (V)')
+ax.set_ylabel('No Load Speed (RPM)')
+plt.title('No Load Speed vs Voltage')
+plt.savefig(os.path.join(my_path, 'Plots/No_Load_Speed_vs_Voltage.png'))
+
+#plot the stall torque for each voltage using the tabulated motor performance data
+fig, ax = plt.subplots()
+ax.scatter(df_table['Voltage (V)'], df_table['Stall Torque (N-m)'], color='red')
+ax.set_xlabel('Voltage (V)')
+ax.set_ylabel('Stall Torque (N-m)')
+plt.title('Stall Torque vs Voltage')
+plt.savefig(os.path.join(my_path, 'Plots/Stall_Torque_vs_Voltage.png'))
+
+#plot the peak efficiency for each voltage using the tabulated motor performance data
+fig, ax = plt.subplots()
+ax.scatter(df_table['Voltage (V)'], df_table['Max Efficiency'], color='green')
+ax.set_xlabel('Voltage (V)')
+ax.set_ylabel('Peak Efficiency')
+plt.title('Peak Efficiency vs Voltage')
+plt.savefig(os.path.join(my_path, 'Plots/Peak_Efficiency_vs_Voltage.png'))

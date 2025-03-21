@@ -1,25 +1,16 @@
 The following outliers were excluded from the data for having a Z-score > 2 (meaning the value was greater than 2 standard deviations above the mean):
 Outliers in the scale reading data: 
-    Test #  Scale Reading (g)  Tach Reading (RPM)  Current Draw (A)  Torque (N-m)  ...  Relative Error Electrical Power  Relative Error Torque  Unnamed: 14  Resistance (Ohms)  Z_Score_Scale Reading (g)
-62      63              284.0                20.0              0.73      0.373714  ...                         0.045148               0.000142          NaN          12.328767                   2.064267
-97      98              295.0                21.0              0.80      0.373926  ...                         0.050160               0.000144           B7          12.500000                   2.206716
-
-[2 rows x 17 columns]
+Empty DataFrame
+Columns: [Test #, Scale Reading (g), Tach Reading (RPM), Current Draw (A), Torque (N-m), Electrical Power (W), Mechanical Power (W), Efficiency, lever arm load (start) (g), Lever arm load  (end) (g), Moment arm (cm), Applied Voltage (v), Relative Error Electrical Power, Relative Error Torque, Unnamed: 14, Resistance (Ohms), Z_Score_Scale Reading (g)]
+Index: []
 Outliers in the Current Draw data: 
-     Test #  Scale Reading (g)  Tach Reading (RPM)  Current Draw (A)  Torque (N-m)  ...  Relative Error Torque  Unnamed: 14  Resistance (Ohms)  Z_Score_Scale Reading (g)  Z_Score_Current Draw (A)
-97       98              295.0                21.0              0.80      0.373926  ...               0.000144           B7          12.500000                   2.206716                  2.205164
-152     153              261.5                34.7              0.79      0.314059  ...               0.000123          NaN          13.924051                   1.772893                  2.155884
-
-[2 rows x 18 columns]
+Empty DataFrame
+Columns: [Test #, Scale Reading (g), Tach Reading (RPM), Current Draw (A), Torque (N-m), Electrical Power (W), Mechanical Power (W), Efficiency, lever arm load (start) (g), Lever arm load  (end) (g), Moment arm (cm), Applied Voltage (v), Relative Error Electrical Power, Relative Error Torque, Unnamed: 14, Resistance (Ohms), Z_Score_Scale Reading (g), Z_Score_Current Draw (A)]
+Index: []
 Outliers in the Tach Reading data: 
-     Test #  Scale Reading (g)  Tach Reading (RPM)  Current Draw (A)  Torque (N-m)  ...  Unnamed: 14  Resistance (Ohms)  Z_Score_Scale Reading (g)  Z_Score_Current Draw (A)  Z_Score_Tach Reading (RPM)
-114     115              30.00               124.0             0.110     -0.000424  ...          NaN          90.909091                  -1.225024                 -1.195116                    2.019016
-115     116              26.00               125.0             0.100     -0.006074  ...          NaN         100.000000                  -1.276824                 -1.244395                    2.051536
-134     135              35.30               134.5             0.120     -0.010029  ...           B5          91.666667                  -1.156389                 -1.145836                    2.360476
-136     137              44.70               130.4             0.145      0.003439  ...          NaN          75.862069                  -1.034660                 -1.022638                    2.227144
-137     138              51.75               124.0             0.180      0.013539  ...          NaN          61.111111                  -0.943362                 -0.850160                    2.019016
-
-[5 rows x 19 columns]
+Empty DataFrame
+Columns: [Test #, Scale Reading (g), Tach Reading (RPM), Current Draw (A), Torque (N-m), Electrical Power (W), Mechanical Power (W), Efficiency, lever arm load (start) (g), Lever arm load  (end) (g), Moment arm (cm), Applied Voltage (v), Relative Error Electrical Power, Relative Error Torque, Unnamed: 14, Resistance (Ohms), Z_Score_Scale Reading (g), Z_Score_Current Draw (A), Z_Score_Tach Reading (RPM)]
+Index: []
 These outliers were excluded due to them being too far from the line fit to the torque data. This is called a residual error: 
      Test #  Scale Reading (g)  Tach Reading (RPM)  Current Draw (A)  Torque (N-m)  ...  Z_Score_Torque (N-m)  Z_Score_Efficiency  Predicted_Torque  Residuals  Standardized Residuals
 11       12               72.2                60.6              0.22      0.090510  ...             -0.495241            2.714417          0.002563   0.087947                3.208804
@@ -28,11 +19,11 @@ These outliers were excluded due to them being too far from the line fit to the 
 23       24               70.0                35.8              0.20      0.059802  ...             -0.785148           -0.822391          0.068440  -0.008639               -2.050705
 44       45              112.0                61.1              0.34      0.147097  ...              0.038993            0.895356          0.181308  -0.034210               -3.117685
 60       61               66.0                81.2              0.22      0.079769  ...             -0.596640            1.238415          0.100739  -0.020970               -1.911001
-74       75              264.0                20.9              0.71      0.344676  ...              1.904308           -1.026677          0.363774  -0.019098               -2.436431
+74       75              264.0                20.9              0.71      0.344676  ...              1.904308           -1.026677          0.365009  -0.020333               -2.635113
 82       83              133.4                90.4              0.28      0.151014  ...              0.075968            2.840238          0.113687   0.037327                3.352273
 96       97              255.4                21.3              0.67      0.321919  ...              1.689465           -1.078502          0.339880  -0.017961               -1.613043
-110     111               89.0                98.0              0.28      0.082922  ...             -0.566874            0.694058          0.093029  -0.010107               -2.937634
-135     136              273.0                44.3              0.73      0.330536  ...              1.770808           -0.351773          0.300753   0.029783                1.801996
-147     148              236.0                62.6              0.60      0.277524  ...              1.270332            0.432304          0.236198   0.041326                2.500412
+110     111               89.0                98.0              0.28      0.082922  ...             -0.566874            0.694058          0.093000  -0.010078               -3.164305
+135     136              273.0                44.3              0.73      0.330536  ...              1.770808           -0.351773          0.297659   0.032876                2.125287
+147     148              236.0                62.6              0.60      0.277524  ...              1.270332            0.432304          0.234409   0.043115                2.787151
 
 [12 rows x 24 columns]
