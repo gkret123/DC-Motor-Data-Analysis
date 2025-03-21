@@ -239,24 +239,29 @@ for voltage in DA.df['Applied Voltage (v)'].unique():
     print(f"RPM vs Torque Coefficients: {coeffs_RPM_vs_Torque}")
     print(f"Current vs RPM Coefficients: {coeffs_Current_vs_RPM}")
 
-    torque_at_rpm = stall_torque + coeffs_RPM_vs_Torque[0] * df_v['Tach Reading (RPM)']
-    current_at_rpm = coeffs_Current_vs_RPM[0] * df_v['Tach Reading (RPM)'] + coeffs_Current_vs_RPM[1]
-    power_output = torque_at_rpm * df_v['Tach Reading (RPM)'] * (2 * np.pi / 60)
-    power_input = current_at_rpm * voltage
-    eff = power_output / power_input
-    RPM_range = np.linspace(df_v['Tach Reading (RPM)'].min(), df_v['Tach Reading (RPM)'].max(), len(eff))
-    
-    ax.scatter(RPM_range, eff,
-               label=r"From Trendline Coeff: $\eta = \frac{(\tau_{stall} + B\omega)\omega}{(A\omega + \omega_{0})V}$")
+    # Create a smooth RPM range and calculate smooth efficiency using trendline coefficients
+    num_points = 100
+    rpm_range = np.linspace(df_v['Tach Reading (RPM)'].min(), df_v['Tach Reading (RPM)'].max(), num_points)
+    torque_smooth = stall_torque + coeffs_RPM_vs_Torque[0] * rpm_range
+    current_smooth = coeffs_Current_vs_RPM[0] * rpm_range + coeffs_Current_vs_RPM[1]
+    power_output_smooth = torque_smooth * rpm_range * (2 * np.pi / 60)
+    power_input_smooth = current_smooth * voltage
+    eff_smooth = power_output_smooth / power_input_smooth
+
+    # Plot smooth trendline for efficiency
+    ax.plot(rpm_range, eff_smooth,
+            label=r"From Trendline Coeff: $\eta = \frac{(\tau_{stall} + B\omega)\omega}{(A\omega + \omega_{0})V}$", color='red')
+    # Plot direct data for efficiency
     ax.scatter(df_v['Tach Reading (RPM)'], df_v['Efficiency'],
                label=r'Direct from Data: $\eta = \frac{\tau\omega}{I V}$')
-    
-    #add max efficiency point and its corresponding torque and RPM in the legend
+
+    # Add max efficiency point details in the legend
     max_eff_index = df_v['Efficiency'].idxmax()
     max_eff_torque = df_v['Torque (N-m)'][max_eff_index]
     max_eff_rpm = df_v['Tach Reading (RPM)'][max_eff_index]
-    ax.scatter(max_eff_rpm, df_v['Efficiency'].max(), label=f'Max Efficiency: {df_v["Efficiency"].max():.2f} at '
-                                                             f'{max_eff_torque:.2f} N-m and {max_eff_rpm} RPM')
+    ax.scatter(max_eff_rpm, df_v['Efficiency'].max(),
+               label=f'Max Efficiency: {df_v["Efficiency"].max():.2f} at {max_eff_torque:.2f} N-m and {max_eff_rpm} RPM')
+
     plt.legend()
     ax.set_ylim(0, df_v['Efficiency'].max() + 0.1)
     ax.set_xlabel('RPM')
@@ -368,18 +373,7 @@ for voltage in DA.df['Applied Voltage (v)'].unique():
           f"{df_v['Tach Reading (RPM)'][df_v['Efficiency'].idxmax()]:.1f} RPM and a torque of "
           f"{df_v['Torque (N-m)'][df_v['Efficiency'].idxmax()]:.3f} N-m")
 
-#list all outliers that were excluded
-print("The following outliers were excluded from the data for having a Z-score > 2 (meaning the value was greater than 2 standard deviations above the mean):")
-print("Outliers in the scale reading data: \n", DA.outliers_Scale)
-print("Outliers in the Current Draw data: \n", DA.outliers_Current)
-print("Outliers in the Tach Reading data: \n", DA.outliers_Tach)
 
-# export outliers to text file
-with open('Outliers.txt', 'w') as f:
-    f.write("The following outliers were excluded from the data for having a Z-score > 2 (meaning the value was greater than 2 standard deviations above the mean):\n")
-    f.write("Outliers in the scale reading data: \n" + str(DA.outliers_Scale) + "\n")
-    f.write("Outliers in the Current Draw data: \n" + str(DA.outliers_Current) + "\n")
-    f.write("Outliers in the Tach Reading data: \n" + str(DA.outliers_Tach) + "\n")
 
 # Plot the Z-scores in histgram/s
 fig, ax = plt.subplots()
@@ -392,6 +386,22 @@ ax.set_ylabel('Frequency')
 ax.legend()
 plt.title('Z-Scores for Scale Reading, Current Draw, and Tach Reading')
 plt.savefig(os.path.join(my_path, 'Plots/Z_Scores.png'))
+
+#list all outliers that were excluded
+print("The following outliers were excluded from the data for having a Z-score > 2 (meaning the value was greater than 2 standard deviations above the mean):")
+print("Outliers in the scale reading data: \n", DA.outliers_Scale)
+print("Outliers in the Current Draw data: \n", DA.outliers_Current)
+print("Outliers in the Tach Reading data: \n", DA.outliers_Tach)
+print("\n")
+print("These outliers were excluded due to them being too far from the line fit to the torque data. This is called a residual error: \n", DA.outliers_Torque)
+
+# export outliers to text file
+with open('Outliers.txt', 'w') as f:
+    f.write("The following outliers were excluded from the data for having a Z-score > 2 (meaning the value was greater than 2 standard deviations above the mean):\n")
+    f.write("Outliers in the scale reading data: \n" + str(DA.outliers_Scale) + "\n")
+    f.write("Outliers in the Current Draw data: \n" + str(DA.outliers_Current) + "\n")
+    f.write("Outliers in the Tach Reading data: \n" + str(DA.outliers_Tach) + "\n")
+    f.write("These outliers were excluded due to them being too far from the line fit to the torque data. This is called a residual error: \n" + str(DA.outliers_Torque) + "\n")
 
 #print stall torque data at each voltage
 for voltage in DA.df['Applied Voltage (v)'].unique():
