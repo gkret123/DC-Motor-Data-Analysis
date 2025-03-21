@@ -50,7 +50,7 @@ for voltage in DA.df['Applied Voltage (v)'].unique():
 #plt.show()
 
 voltages = [5.0, 9.53, 11.0]
-fig, ax = plt.subplots(figsize=(20, 12))
+fig, ax = plt.subplots()
 for voltage in voltages:
     df_v_3 = DA.df[DA.df['Applied Voltage (v)'] == voltage].sort_values(by='Tach Reading (RPM)')
     coeffs_RPM_vs_Torque = np.polyfit(df_v_3['Tach Reading (RPM)'], df_v_3['Torque (N-m)'], 1)
@@ -132,7 +132,7 @@ for voltage in DA.df['Applied Voltage (v)'].unique():
 #plt.show()
 
 voltages = [5.0, 9.53, 11.0]
-fig, ax = plt.subplots(figsize=(20, 12))
+fig, ax = plt.subplots()
 for voltage in voltages:
     df_v_3 = DA.df[DA.df['Applied Voltage (v)'] == voltage]
     coeffs_RPM_vs_Torque = np.polyfit(df_v_3['Tach Reading (RPM)'], df_v_3['Torque (N-m)'], 1)
@@ -166,7 +166,7 @@ for voltage in DA.df['Applied Voltage (v)'].unique():
 #plt.show()
 
 voltages = [5.0, 9.53, 11.0]
-fig, ax = plt.subplots(figsize=(20, 12))
+fig, ax = plt.subplots()
 for voltage in voltages:
     df_v_3 = DA.df[DA.df['Applied Voltage (v)'] == voltage]
     coeffs_RPM_vs_Torque = np.polyfit(df_v_3['Current Draw (A)'], df_v_3['Torque (N-m)'], 1)
@@ -199,7 +199,7 @@ for voltage in DA.df['Applied Voltage (v)'].unique():
     plt.savefig(os.path.join(my_path, f'Plots/RPM_vs_Current/RPM_vs_Current_{voltage}V.png'))
 #plt.show()
 voltages = [5.0, 9.53, 11.0]
-fig, ax = plt.subplots(figsize=(20, 12))
+fig, ax = plt.subplots()
 for voltage in voltages:
     df_v_3 = DA.df[DA.df['Applied Voltage (v)'] == voltage]
     coeffs_RPM_vs_Torque = np.polyfit(df_v_3['Current Draw (A)'], df_v_3['Tach Reading (RPM)'], 1)
