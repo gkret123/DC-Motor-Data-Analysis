@@ -1,5 +1,5 @@
 Properties of the motor:
-The mean Motor Torque Constant is: 0.5488134743835748 N-m/A
-The peak efficiency is 0.5357498919681565 at a voltage of 9.53
-The mean Back EMF constant is: 0.5793629072928242 V-s/rad
+The mean Motor Torque Constant is: 0.5473873391371125 N-m/A
+The peak efficiency is 0.4126977426372786 at a voltage of 9.0
+The mean Back EMF constant is: 0.5807910141307842 V-s/rad
 The average resistance is: 34.1810060195894 Ohms

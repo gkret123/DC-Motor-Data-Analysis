@@ -8,6 +8,14 @@ import GK_Data_Analysis as DA
 my_path = os.path.dirname(os.path.abspath(__file__))
 sns.set()
 
+# Increase font sizes for all plots globally
+plt.rcParams.update({
+    'axes.labelsize': 16,    # X and Y labels
+    'xtick.labelsize': 14,   # X tick labels
+    'ytick.labelsize': 14,   # Y tick labels
+    'axes.titlesize': 10     # Title size (optional)
+})
+
 # Plot Mechanical Power vs RPM for each applied voltage
 for voltage in DA.df['Applied Voltage (v)'].unique():
     df_v = DA.df[DA.df['Applied Voltage (v)'] == voltage].sort_values(by='Tach Reading (RPM)')
@@ -270,15 +278,17 @@ for voltage in DA.df['Applied Voltage (v)'].unique():
     print(f"RPM vs Torque Coefficients: {coeffs_RPM_vs_Torque}")
     print(f"Current vs RPM Coefficients: {coeffs_Current_vs_RPM}")
 
-    torque_at_rpm = stall_torque + coeffs_RPM_vs_Torque[0] * df_v['Tach Reading (RPM)']
-    current_at_rpm = coeffs_Current_vs_RPM[0] * df_v['Tach Reading (RPM)'] + coeffs_Current_vs_RPM[1]
-    power_output = torque_at_rpm * df_v['Tach Reading (RPM)'] * (2 * np.pi / 60)
+    # Derive a smooth torque_range and corresponding rpm_range using the linear relationship
+    num_points = 100
+    torque_range = np.linspace(df_v['Torque (N-m)'].min(), df_v['Torque (N-m)'].max(), num_points)
+    rpm_range = (torque_range - stall_torque) / coeffs_RPM_vs_Torque[0]
+    current_at_rpm = coeffs_Current_vs_RPM[0] * rpm_range + coeffs_Current_vs_RPM[1]
+    power_output = torque_range * rpm_range * (2 * np.pi / 60)
     power_input = current_at_rpm * voltage
     eff = power_output / power_input
-    RPM_range = np.linspace(df_v['Tach Reading (RPM)'].min(), df_v['Tach Reading (RPM)'].max(), len(eff))
     
-    ax.scatter(torque_at_rpm, eff,
-               label=r"From Trendline Coeff: $\eta = \frac{(\tau_{stall} + B\omega)\omega}{(A\omega + \omega_{0})V}$")
+    ax.plot(torque_range, eff,
+               label=r"From Trendline Coeff: $\eta = \frac{(\tau_{stall} + B\omega)\omega}{(A\omega + \omega_{0})V}$", color='red')
     ax.scatter(df_v['Torque (N-m)'], df_v['Efficiency'],
                label=r'Direct from Data: $\eta = \frac{\tau\omega}{I V}$')
         #add max efficiency point and its corresponding torque and RPM in the legend
@@ -305,20 +315,35 @@ for voltage in DA.df['Applied Voltage (v)'].unique():
     coeffs_RPM_vs_Torque = np.polyfit(df_v['Tach Reading (RPM)'], df_v['Torque (N-m)'], 1)
     coeffs_Current_vs_RPM = np.polyfit(df_v['Tach Reading (RPM)'], df_v['Current Draw (A)'], 1)
     stall_torque = coeffs_RPM_vs_Torque[1]
-
-    torque_at_rpm = stall_torque + coeffs_RPM_vs_Torque[0] * df_v['Tach Reading (RPM)']
-    current_at_rpm = coeffs_Current_vs_RPM[0] * df_v['Tach Reading (RPM)'] + coeffs_Current_vs_RPM[1]
-    power_output = torque_at_rpm * df_v['Tach Reading (RPM)'] * (2 * np.pi / 60)
-    power_input = current_at_rpm * voltage
-    eff = power_output / power_input
-    RPM_range = np.linspace(df_v['Tach Reading (RPM)'].min(), df_v['Tach Reading (RPM)'].max(), len(eff))
     
-    ax.scatter(power_output, eff,
-               label=r"From Trendline Coeff: $\eta = \frac{(\tau_{stall} + B\omega)\omega}{(A\omega + \omega_{0})V}$")
+    # Derive a smooth torque_range and corresponding rpm_range to compute smooth mechanical power vs efficiency
+    num_points = 100
+    torque_range = np.linspace(df_v['Torque (N-m)'].min(), df_v['Torque (N-m)'].max(), num_points)
+    rpm_range = (torque_range - stall_torque) / coeffs_RPM_vs_Torque[0]
+    current_at_rpm = coeffs_Current_vs_RPM[0] * rpm_range + coeffs_Current_vs_RPM[1]
+    power_output_smooth = torque_range * rpm_range * (2 * np.pi / 60)
+    power_input_smooth = current_at_rpm * voltage
+    eff_smooth = power_output_smooth / power_input_smooth
+
+    # Plot the smooth trendline using the trendline coefficients
+    ax.plot(power_output_smooth, eff_smooth,
+            label=r"From Trendline Coeff: $\eta = \frac{(\tau_{stall} + B\omega)\omega}{(A\omega + \omega_{0})V}$", color='red')
+    
+    # Plot the direct data
     ax.scatter(df_v['Mechanical Power (W)'], df_v['Efficiency'],
                label=r'Direct from Data: $\eta = \frac{\tau\omega}{I V}$')
+    
+    # Add max efficiency point from data to the legend
+    max_eff_index = df_v['Efficiency'].idxmax()
+    max_eff_power = df_v['Mechanical Power (W)'][max_eff_index]
+    ax.scatter(max_eff_power, df_v['Efficiency'].max(),
+               label=f'Max Efficiency: {df_v["Efficiency"].max():.2f} at {max_eff_power:.2f} W')
+    
+    # Add stall torque to the legend (mechanical power is zero at stall)
+    ax.scatter(0, 0, label=f'Stall Torque: {stall_torque:.2f} N-m')
+
     plt.legend()
-    ax.set_ylim(0, max(eff) + 0.1)
+    ax.set_ylim(0, max(eff_smooth) + 0.1)
     ax.set_xlabel('Mechanical Power (W)')
     ax.set_ylabel('Efficiency')
     plt.title(f'Efficiency vs Mechanical Power for {voltage} V')
