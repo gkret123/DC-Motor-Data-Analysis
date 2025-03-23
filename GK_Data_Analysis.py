@@ -49,10 +49,10 @@ average_resistance = df['Resistance (Ohms)'].mean()
 print("\nMissing values per column after filling:")
 print(df.isnull().sum())
 
-#
+df_original = df.copy()
 #drop all data associated with the 10.5 volt data point
 df = df[df['Applied Voltage (v)'] != 10.5]
-
+ 
 #find outliers for all relevant columns and returnt the coutliers, the z score and the column name
 Z_score_lim = 2.5
 def find_outliers(df, column):
