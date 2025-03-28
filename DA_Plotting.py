@@ -420,6 +420,20 @@ print("Outliers in the Current Draw data: \n", DA.outliers_Current)
 print("Outliers in the Tach Reading data: \n", DA.outliers_Tach)
 print("\n")
 print("These outliers were excluded due to them being too far from the line fit to the torque data. This is called a residual error: \n", DA.outliers_Torque)
+#calculate standard error of the mean for the torque constant
+
+mean_torque_constant = np.mean(torque_constant)
+std_torque_constant = np.std(torque_constant)
+stderr_torque_constant = std_torque_constant / np.sqrt(len(torque_constant))
+print(f"The mean torque constant is: {mean_torque_constant:.4f} N-m/A")
+print(f"The standard error of the mean for the torque constant is: {stderr_torque_constant:.4f} N-m/A")
+
+#calculate standard error of the mean for the Back emf constant
+mean_K_e = np.mean(K_e)
+std_K_e = np.std(K_e)
+stderr_K_e = std_K_e / np.sqrt(len(K_e))
+print(f"The mean Back EMF constant is: {mean_K_e:.4f} V-s/rad")
+print(f"The standard error of the mean for the Back EMF constant is: {stderr_K_e:.4f} V-s/rad")
 
 # export outliers to text file
 with open('Outliers.txt', 'w') as f:
@@ -477,19 +491,10 @@ with open('Outliers.txt', 'w') as f:
         })
 with open('Motor_Properties.txt', 'w') as f:
     f.write("Properties of the motor:\n")
-    f.write("The mean Motor Torque Constant is: " + str(np.mean(torque_constant)) + " N-m/A\n")
+    f.write("The mean Motor Torque Constant is: " + str(np.mean(torque_constant)) + "+/-" +  str(stderr_torque_constant) + " N-m/A\n")
     f.write("The peak efficiency is " + str(DA.df['Efficiency'].max()) +
             " at a voltage of " + str(DA.df['Applied Voltage (v)'][DA.df['Efficiency'].idxmax()]) + "\n")
-    f.write("The mean Back EMF constant is: " + str(np.mean(K_e)) + " V-s/rad\n")
-    f.write("The average resistance is: " + str(DA.average_resistance) + " Ohms\n")
-
-# Save motor properties to a text file and print its contents
-with open('Motor_Properties.txt', 'w') as f:
-    f.write("Properties of the motor:\n")
-    f.write("The mean Motor Torque Constant is: " + str(np.mean(torque_constant)) + " N-m/A\n")
-    f.write("The peak efficiency is " + str(DA.df['Efficiency'].max()) +
-            " at a voltage of " + str(DA.df['Applied Voltage (v)'][DA.df['Efficiency'].idxmax()]) + "\n")
-    f.write("The mean Back EMF constant is: " + str(np.mean(K_e)) + " V-s/rad\n")
+    f.write("The mean Back EMF constant is: " + str(np.mean(K_e)) + "+/-" +  str(stderr_K_e) + " V-s/rad\n")
     f.write("The average resistance is: " + str(DA.average_resistance) + " Ohms\n")
 
     f.write("\nTabulated Motor Performance Data:\n")
@@ -550,3 +555,5 @@ ax.set_ylabel('Torque (N-m)')
 plt.title('Outliers in Torque vs RPM for 5V')
 plt.legend()
 plt.savefig(os.path.join(my_path, 'Plots/Outliers_Torque_vs_RPM_5V.png'))
+
+

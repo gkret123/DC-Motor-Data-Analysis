@@ -120,5 +120,7 @@ print("\nRemoved outliers in Torque (N-m).")
 #save to new excel file
 df.to_excel("GK_Data_M1_filled.xlsx", index=False)
 
+#save outliers to new excel file
+outliers_Torque.to_excel("GK_Data_M1_outliers.xlsx", index=False)
 print("Data Processing Complete")
 
